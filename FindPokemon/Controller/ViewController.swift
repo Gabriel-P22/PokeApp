@@ -2,36 +2,41 @@ import UIKit
 
 class ViewController: UIViewController {
     
-    private var data: [String] = []
+    private var pokemon: [PokemonEntry] = []
     
     lazy var tableView: UITableView = {
         let tableView = UITableView(frame: .zero, style: .insetGrouped)
         
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
+        tableView.delegate = self
         
         return tableView
     }()
     
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-       
         view.addSubview(tableView)
         
         setConstraints()
+        
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "UITableViewCell")
         
         getApi()
     }
     
     func getApi() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
+        DispatchQueue.main.asyncAfter(deadline: .now()) {
             [weak self] in
-            self?.data.append("Mock 1")
-            self?.data.append("Mock 2")
-            self?.data.append("Mock 3")
-            self?.data.append("Mock 4")
-            self?.data.append("Mock 5")
-            self?.tableView.reloadData()
+            PokeApi().getData() { [self] pokemon in
+                self?.pokemon = pokemon
+                
+                guard let pokemon = self?.pokemon else { return }
+                
+                self?.tableView.reloadData()
+            }
         }
     }
  
@@ -43,22 +48,23 @@ class ViewController: UIViewController {
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
     }
-    
 }
 
-extension ViewController: UITableViewDataSource {
+extension ViewController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .default, reuseIdentifier: "UITableViewCell")
-        let model = data[indexPath.item]
+        let pokemonDataCell = pokemon[indexPath.row]
         
-        cell.textLabel?.text = model
+        
+        cell.textLabel?.text = pokemonDataCell.name
         
         return cell
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return data.count
+//        print(namePokemons.count)
+        return pokemon.count
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
